@@ -41,7 +41,7 @@ import yaml
 
 from rosetta.contract.schema import load_contract
 from rosetta.contract.sidecar import LEROBOT_CONTRACT_SIDECAR_PATH
-from rosetta.contract.specs import iter_observation_specs, iter_specs
+from rosetta.contract.specs import iter_action_specs, iter_observation_specs, iter_specs
 from rosetta.policies import available_dataset_writers, load_dataset_writer
 from rosetta.robots.ros2.offline.bag_frames import find_bag_dirs, iter_bag_frames, read_bag_contract_text
 
@@ -166,9 +166,10 @@ def port(
     """
     contract = load_contract(contract_path)
     specs = list(iter_specs(contract))
-    # Only observation streams gate warmup: actions and extended sections
-    # (rewards/signals/info) may legitimately start late or publish sparsely.
-    warmup_keys = {s.key for s in iter_observation_specs(contract)}
+    # Observation and action streams gate warmup: an episode starts only once
+    # every one has a sample, so no frame carries zero-filled actions. Extended
+    # sections (rewards/signals/info) may legitimately start late or publish sparsely.
+    warmup_keys = {s.key for s in iter_observation_specs(contract)} | {s.key for s in iter_action_specs(contract)}
     # Per-frame task labels: task topics win over the recorded prompt.
     task_topics = {t.channel.topic: t.channel.type for t in contract.tasks}
 

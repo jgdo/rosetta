@@ -101,9 +101,9 @@ def _build_buffers(
     Every spec gets a buffer, in spec order — including specs whose topic is
     missing from the bag (warned; their buffers never fill, so they zero-fill
     at sample time, matching the live bridge and the declared feature shapes).
-    Absent *observation* topics are additionally rejected by iter_bag_frames'
-    warmup gate — only non-warmup streams (actions, rewards, signals) may
-    legitimately be absent. ``routing`` maps each bag topic to the indices of
+    Absent warmup (observation/action) topics are additionally rejected by
+    iter_bag_frames' warmup gate — only non-warmup streams (rewards, signals)
+    may legitimately be absent. ``routing`` maps each bag topic to the indices of
     all entries reading it (several specs may read one topic with different
     selectors). Raises ValueError if specs routed to one topic declare
     different msg_types (the message is deserialized once per topic).
@@ -200,11 +200,11 @@ def _open_and_validate(bag_dir: Path, specs: list[StreamSpec], warmup_keys: set[
 
     Both checks here refuse a port that would otherwise *succeed* while writing
     fabricated data, which is worse than any crash: an undecodable stream and
-    an absent observation topic both end up as silent all-zero columns.
+    an absent observation/action topic both end up as silent all-zero columns.
 
     Raises:
         RuntimeError: a contract stream cannot be decoded, or a warmup
-            (observation) topic is absent from the bag.
+            (observation/action) topic is absent from the bag.
 
     """
     meta = read_bag_metadata(bag_dir)
@@ -240,9 +240,9 @@ def _open_and_validate(bag_dir: Path, specs: list[StreamSpec], warmup_keys: set[
                 f"the channel."
             )
 
-        # Warmup (observation) topics absent from the bag: their buffers could
-        # never fill, so every frame would silently carry fabricated zeros for
-        # them. Non-warmup streams keep the warn + zero-fill behavior.
+        # Warmup (observation/action) topics absent from the bag: their buffers
+        # could never fill, so every frame would silently carry fabricated zeros
+        # for them. Non-warmup streams keep the warn + zero-fill behavior.
         absent = sorted(
             f"{spec.key} ({spec.source.channel.topic})"
             for spec, _ in entries
@@ -250,7 +250,7 @@ def _open_and_validate(bag_dir: Path, specs: list[StreamSpec], warmup_keys: set[
         )
         if absent:
             raise RuntimeError(
-                f"{bag_dir.name}: observation topics missing from bag: {absent}. "
+                f"{bag_dir.name}: warmup (observation/action) topics missing from bag: {absent}. "
                 f"Check the contract topic names against the recording."
             )
 
@@ -290,8 +290,9 @@ def iter_bag_frames(
       (offline tick t covers receive times <= t, matching the live
       ``StreamBuffer.sample`` semantics).
     - Ticks are skipped ("warmup") until every stream whose key is in
-      ``warmup_keys`` has at least one sample, so the first emitted frame never
-      carries zero-filled observations the way a cold live bridge never serves
+      ``warmup_keys`` (observations and actions, as passed by ``port``) has at
+      least one sample, so the first emitted frame never carries zero-filled
+      observations or actions, the way a cold live bridge never serves
       frames before its subscriptions deliver. The tick grid stays anchored at
       the bag start; skipped ticks reduce the emitted count.
 
@@ -332,7 +333,7 @@ def iter_bag_frames(
         detail = ", ".join(f"{k}: +{ns / 1e9:.2f}s" for k, ns in sorted(delays.items()))
         if skipped > max(int(fps * WARMUP_WARN_SECONDS), int(n_ticks * WARMUP_WARN_FRACTION)):
             logging.warning(
-                "%s: skipped %d warmup ticks (%.2fs) waiting for observation "
+                "%s: skipped %d warmup ticks (%.2fs) waiting for observation/action "
                 "streams; stream delays (latest sample at warmup): %s",
                 bag_dir.name,
                 skipped,
@@ -410,7 +411,7 @@ def iter_bag_frames(
         if emitted == 0:
             stale = [entries[i][0].key for i in warmup_idxs if entries[i][1].last_ts is None]
             raise RuntimeError(
-                f"{bag_dir.name}: no frames emitted; observation streams never produced a sample: {stale}"
+                f"{bag_dir.name}: no frames emitted; warmup streams never produced a sample: {stale}"
             )
     finally:
         # Generator: this runs on normal completion, on an exception, and on

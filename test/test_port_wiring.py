@@ -80,4 +80,4 @@ def test_port_passes_task_topics_and_warmup_keys(tmp_path, monkeypatch):
     port(raw_dir=tmp_path, repo_id="r", contract_path=contract_path)
 
     assert seen["task_topics"] == {"/task_prompt": "std_msgs/msg/String"}
-    assert seen["warmup_keys"] == {"observation.state"}
+    assert seen["warmup_keys"] == {"observation.state", "action"}

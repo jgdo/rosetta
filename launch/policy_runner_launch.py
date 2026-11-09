@@ -20,6 +20,7 @@ Set configure:=false activate:=false for manual lifecycle control.
 
 Configuration is loaded from params/policy_runner.yaml (source of truth).
 Launch arguments override only deployment-specific settings (paths, server address, etc.).
+The policy type is read from the checkpoint's config.json ("type" field).
 Algorithm/tuning parameters should be set in the YAML file.
 
 Usage:
@@ -62,7 +63,6 @@ def launch_setup(context, *args, **kwargs):
     params_file = LaunchConfiguration("params_file").perform(context)
     contract_path = LaunchConfiguration("contract_path").perform(context)
     pretrained_name_or_path = LaunchConfiguration("pretrained_name_or_path").perform(context)
-    policy_type = LaunchConfiguration("policy_type").perform(context)
     server_address = LaunchConfiguration("server_address").perform(context)
     launch_local_server = LaunchConfiguration("launch_local_server").perform(context)
     use_sim_time = LaunchConfiguration("use_sim_time").perform(context)
@@ -73,8 +73,6 @@ def launch_setup(context, *args, **kwargs):
     overrides = {"contract_path": contract_path}
     if pretrained_name_or_path:
         overrides["pretrained_name_or_path"] = pretrained_name_or_path
-    if policy_type:
-        overrides["policy_type"] = policy_type
     if server_address:
         overrides["server_address"] = server_address
     if launch_local_server:
@@ -122,11 +120,6 @@ def generate_launch_description():
             "pretrained_name_or_path",
             default_value="",  # Empty = use value from params file
             description="Path or HF repo ID of trained policy (empty = use params file value)",
-        ),
-        DeclareLaunchArgument(
-            "policy_type",
-            default_value="",  # Empty = use value from params file
-            description="Policy architecture, must match the checkpoint (empty = use params file value)",
         ),
         # Server configuration
         DeclareLaunchArgument(

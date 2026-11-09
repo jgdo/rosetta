@@ -8,12 +8,11 @@ are under [policy_runner_node](../reference/nodes.md#policy_runner_node).
 ```bash
 ros2 launch rosetta policy_runner_launch.py \
     contract_path:=robot.yaml \
-    pretrained_name_or_path:=outputs/train/my_policy/checkpoints/last/pretrained_model \
-    policy_type:=act
+    pretrained_name_or_path:=outputs/train/my_policy/checkpoints/last/pretrained_model
 ```
 
-`pretrained_name_or_path` also accepts a Hugging Face Hub model id. `policy_type` has to
-match the checkpoint. Add `use_sim_time:=true` for a simulator.
+`pretrained_name_or_path` also accepts a Hugging Face Hub model id. The policy type is
+read from the checkpoint's `config.json`. Add `use_sim_time:=true` for a simulator.
 
 In a second terminal, start a run with the prompt you recorded with:
 

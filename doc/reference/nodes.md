@@ -140,7 +140,7 @@ adapter's. `params/policy_runner.yaml` sets the third.
 | Parameter | Adapter default | Params file | Meaning |
 |---|---|---|---|
 | `pretrained_name_or_path` | `""` | `iblnk/act-turtlebot3_demo` | Local path or Hub model id. |
-| `policy_type` | `act` | `act` | One of `act`, `smolvla`, `diffusion`, `tdmpc`, `vqbet`, `pi0`, `pi05`. Must match the checkpoint. |
+| `policy_type` | `""` | unset | Empty means read the `type` field of the checkpoint's `config.json` (local or Hub). Set it only to override; configure fails if it's empty and the type can't be read. |
 | `policy_device` | `cuda` | `cuda` | Falls back to `cpu` with a warning if the backend is missing. Empty means `cpu`. |
 | `server_address` | `127.0.0.1:8080` | same | |
 | `launch_local_server` | `true` | `true` | Start `python -m lerobot_rosetta.policy_server` at configure, with the model preloaded when `pretrained_name_or_path` is set. Restarted per run if it died. |
@@ -151,7 +151,7 @@ adapter's. `params/policy_runner.yaml` sets the third.
 | `obs_similarity_atol` | `1.0` | `-1.0` | Negative disables. Ignored by stock LeRobot 0.6.0. |
 
 Launch arguments: `params_file`, `contract_path`,
-`pretrained_name_or_path`, `policy_type`, `server_address`,
+`pretrained_name_or_path`, `server_address`,
 `launch_local_server`, `use_sim_time`, `log_level`, `configure`, `activate`.
 `policy_device` is not a launch argument. Set it in the params file.
 

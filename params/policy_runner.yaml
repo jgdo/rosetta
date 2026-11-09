@@ -19,10 +19,8 @@ policy_runner:
     # LeRobot policy server address (host:port)
     server_address: "127.0.0.1:8080"
 
-    # Policy architecture type — must match the pretrained checkpoint above
-    # (a mismatch fails at configure inside lerobot's from_pretrained).
-    # Options: "act", "smolvla", "diffusion", "tdmpc", "vqbet", "pi0", "pi05"
-    policy_type: "act"
+    # Policy architecture is read from the checkpoint's config.json ("type").
+    # Set policy_type here only to override it.
 
     # Device for policy inference: "cuda", "xpu", "mps", "cpu", or specific like "cuda:0"
     policy_device: "cuda"
@@ -34,13 +32,13 @@ policy_runner:
     # Server filters most non-must_go observations via similarity check (atol=1).
     # At 30Hz: actions_per_chunk=50 → ~1.67s between inferences
     #          actions_per_chunk=10 → ~0.33s between inferences
-    actions_per_chunk: 30
+    actions_per_chunk: 10
 
     # Threshold for when to request new action chunk (0.0 - 1.0)
     # Controls when client SENDS observations to server.
     # Server may still FILTER them via _obs_sanity_checks (similarity + timestep).
     # Only must_go=True observations bypass filtering entirely.
-    chunk_size_threshold: 0.95
+    chunk_size_threshold: 0.5
 
     # How to aggregate overlapping action chunks
     # Options: "weighted_average" (0.3*old + 0.7*new), "latest_only" (new only),

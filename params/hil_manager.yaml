@@ -113,7 +113,7 @@ robot_policy:
     actions_per_chunk: 30
 
     # Threshold for when to request a new action chunk (0.0 - 1.0)
-    chunk_size_threshold: 0.95
+    chunk_size_threshold: 0.5
 
     # How to aggregate overlapping action chunks
     aggregate_fn_name: "weighted_average"
